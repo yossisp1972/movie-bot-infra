@@ -5,4 +5,4 @@ on:
 
 jobs:
   Build-Infra:
-    uses: yossisp1972/movie-bot-infra/.github/workflow/infra.yaml@latest
+    uses: yossisp1972/movie-bot-infra/.github/workflows/infra.yaml@latest
