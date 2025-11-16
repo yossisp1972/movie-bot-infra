@@ -5,4 +5,5 @@ on:
 
 jobs:
   Build-Infra:
+    # Run the Infra Workflow
     uses: yossisp1972/movie-bot-infra/.github/workflows/infra.yaml@latest
