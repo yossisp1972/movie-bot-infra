@@ -1,7 +1,6 @@
 provider "aws" {
-    region = "us-east-1"
+    region = var.region
 }
-
 resource module "vpc" {
     cidr_block           = "10.0.0.0/16"
     enable_dns_support   = true
