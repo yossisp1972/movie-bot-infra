@@ -10,5 +10,5 @@ jobs:
         uses: actions/checkout@v4
 
       # Add your infra steps here
-      - name: Example step
-        run: echo "Infra workflow triggered by workflow_call"
+      - name: Terraform plan
+        run: terraform plan
