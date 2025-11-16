@@ -1,0 +1,15 @@
+name: Infra Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Add your infra steps here
+      - name: Example step
+        run: echo "Infra workflow triggered by workflow_call"

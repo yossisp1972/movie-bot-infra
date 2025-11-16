@@ -1,0 +1,8 @@
+name: Caller Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Build-Infra:
+    uses: yossisp1972/movie-bot-infra/.github/workflow/infra.yaml
