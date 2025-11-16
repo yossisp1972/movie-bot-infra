@@ -1,5 +1,4 @@
 name: Infra Workflow
-
 on:
   workflow_call:
 
