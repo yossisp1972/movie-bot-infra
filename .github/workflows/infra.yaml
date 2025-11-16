@@ -9,5 +9,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Terraform plan
-        run: terraform plan
+      - name: Terraform init
+        run: terraform init
