@@ -9,6 +9,6 @@ module  "vpc" {
     enable_dns_hostnames = true
 
     tags = {
-        vpc_name =  var.vpc_name
+        Name =  var.vpc_name
     }
 }
