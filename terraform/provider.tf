@@ -10,7 +10,8 @@ terraform {
         bucket         = "movie-bot-tfstate"
         key            = "global/s3/terraform.tfstate"
         region         = "us-east-1"
-        use_lockfile = "movie-bot-tflock" # optional, for state locking
+        use_lockfile   = true
+        lock_table     = "movie-bot-tflock" # optional, for state locking
         encrypt        = true
   }
 }
