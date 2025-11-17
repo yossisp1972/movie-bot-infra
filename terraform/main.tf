@@ -19,5 +19,31 @@ module  "vpc" {
     Name        = var.vpc_name
     Environment = "dev"
   }
+  
     
+}
+
+module "eks" {
+    source = "terraform-aws-modules/eks/aws"
+    version = "18.0.0"
+
+    cluster_name    = var.cluster_name
+    cluster_version = var.cluster_version
+    subnet_ids      = module.vpc.private_subnets
+    vpc_id          = module.vpc.vpc_id
+
+    eks_managed_node_groups = {
+        eks_nodes = {
+            desired_capacity = 2
+            max_capacity     = 3
+            min_capacity     = 1
+
+            instance_type = "t1.small"
+            key_name      = var.key_name
+
+            tags = {
+                Name = "eks-node"
+            }
+        }
+    }
 }
