@@ -36,9 +36,9 @@ module "eks" {
       before_compute = true
     }
     kube-proxy             = {}
-    vpc-cni                = {
-      before_compute = true
-    }
+    # vpc-cni                = {
+    #   before_compute = true
+    # }
   }
 
   # Optional
