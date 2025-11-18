@@ -29,16 +29,17 @@ module "eks" {
 
   name               = var.cluster_name
   kubernetes_version = "1.33"
-
+  
   addons = {
     coredns                = {}
     eks-pod-identity-agent = {
       before_compute = true
     }
     kube-proxy             = {}
-    # vpc-cni                = {
-    #   before_compute = true
-    # }
+    vpc-cni                = {
+      before_compute = true
+      resolve_conflicts  = "OVERWRITE"
+    }
   }
 
   # Optional
