@@ -26,13 +26,12 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        working-directory: ./learn-terraform-provision-eks-cluster
-
+        working-directory: ./tf
+        
       - name: Terraform plan
         run: terraform plan -out=tfplan
-        working-directory: ./learn-terraform-provision-eks-cluster
+        working-directory: ./tf
 
       - name: Terraform apply
         run: terraform apply -auto-approve tfplan
-        working-directory: ./learn-terraform-provision-eks-cluster
-        
+        working-directory: ./tf
