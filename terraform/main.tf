@@ -31,13 +31,17 @@ module "eks" {
   kubernetes_version = "1.33"
   
   addons = {
-    # coredns                = {}
-    # eks-pod-identity-agent = {
-    #   before_compute = true
-    # }
-    # kube-proxy             = {}
+    coredns                = {
+      most_recent    = true
+    }
+    eks-pod-identity-agent = {
+      before_compute = true
+      most_recent    = true
+    }
+    kube-proxy             = {}
     vpc-cni                = {
       before_compute = true
+      most_recent    = true
       # resolve_conflicts  = "OVERWRITE"
     }
   }
