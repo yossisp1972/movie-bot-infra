@@ -76,22 +76,22 @@ module "eks" {
     one = {
       name = "node-group-1"
 
-      instance_types = ["t3.small"]
+      instance_types = ["t3.micro"]
 
       min_size     = 1
       max_size     = 3
       desired_size = 2
     }
 
-    two = {
-      name = "node-group-2"
+    # two = {
+    #   name = "node-group-2"
 
-      instance_types = ["t3.small"]
+    #   instance_types = ["t3.micro"]
 
-      min_size     = 1
-      max_size     = 2
-      desired_size = 1
-    }
+    #   min_size     = 1
+    #   max_size     = 2
+    #   desired_size = 1
+    # }
   }
 }
 
@@ -110,4 +110,22 @@ module "irsa-ebs-csi" {
   provider_url                  = module.eks.oidc_provider
   role_policy_arns              = [data.aws_iam_policy.ebs_csi_policy.arn]
   oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
+}
+
+# IRSA for Karpenter
+module "irsa-karpenter" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version = "5.39.0"
+
+  create_role      = true
+  role_name        = "KarpenterControllerRole-${module.eks.cluster_name}"
+  provider_url     = module.eks.oidc_provider
+  role_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/AmazonEC2FullAccess",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  ]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:karpenter:karpenter"]
 }

@@ -20,3 +20,8 @@ output "cluster_name" {
   description = "Kubernetes Cluster Name"
   value       = module.eks.cluster_name
 }
+
+output "eks_oidc_provider" {
+  description = "OIDC provider for EKS cluster"
+  value = module.eks.oidc_provider
+}
