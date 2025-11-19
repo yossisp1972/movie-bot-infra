@@ -12,7 +12,7 @@ terraform {
         bucket         = "movie-bot-tfstate"
         key            = "global/s3/terraform.tfstate"
         region         = "us-east-1"
-        use_lockfile   = true
+        # use_lockfile   = true
         # dynamodb_table = "movie-bot-tflock" # optional, for state locking
         encrypt        = true
   }
