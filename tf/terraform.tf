@@ -16,11 +16,11 @@ terraform {
         # dynamodb_table = "movie-bot-tflock" # optional, for state locking
         encrypt        = true
   }
-
+  
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.0.0"
+      version = "< 3.0.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -49,4 +49,3 @@ terraform {
 
   required_version = "~> 1.3"
 }
-
