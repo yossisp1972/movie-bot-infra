@@ -44,6 +44,7 @@ jobs:
         id: export_outputs
         run: |
           TERRAFORM_OUTPUTS=$(terraform output -json)
+          terraform output -json
           echo "cluster_name=$(echo $TERRAFORM_OUTPUTS | jq -r '.cluster_name.value')" >> $GITHUB_OUTPUT
           # echo "my_ip_address=$(echo $TERRAFORM_OUTPUTS | jq -r '.my_ip_address.value')" >> $GITHUB_OUTPUT
 
