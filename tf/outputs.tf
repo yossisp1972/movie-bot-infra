@@ -26,7 +26,3 @@ output "eks_oidc_provider" {
   value = module.eks.oidc_provider
 }
 
-output "argocd_server_hostname" {
-  value = kubernetes.argocd_server.status[0].load_balancer[0].ingress[0].hostname
-  description = "The DNS name of the Argo CD LoadBalancer service"
-}
