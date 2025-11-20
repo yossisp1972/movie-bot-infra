@@ -40,11 +40,12 @@ jobs:
         run: |
           terraform output -raw eks_cluster_name > cluster_name.txt
 
-      - name: Set Cluster Name Variable
-        id: set-cluster
+      - name: Export Terraform Outputs to GitHub Environment
+        id: export_outputs
         run: |
-           CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
-           echo "CLUSTER_NAME=$(cat cluster_name.txt)" >> $GITHUB_ENV
+          TERRAFORM_OUTPUTS=$(terraform output -json)
+          echo "cluster_name=$(echo $TERRAFORM_OUTPUTS | jq -r '.cluster_name.value')" >> $GITHUB_OUTPUT
+          # echo "my_ip_address=$(echo $TERRAFORM_OUTPUTS | jq -r '.my_ip_address.value')" >> $GITHUB_OUTPUT
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region us-east-1 --name $CLUSTER_NAME
