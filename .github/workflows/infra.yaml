@@ -48,7 +48,7 @@ jobs:
           # echo "my_ip_address=$(echo $TERRAFORM_OUTPUTS | jq -r '.my_ip_address.value')" >> $GITHUB_OUTPUT
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region us-east-1 --name $CLUSTER_NAME
+        run: aws eks update-kubeconfig --region us-east-1 --name ${{steps.export_outputs.outputs.cluster_name}}
 
       - name: Get argocd password
         run: |
