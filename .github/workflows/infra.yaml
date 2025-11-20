@@ -48,11 +48,14 @@ jobs:
           terraform output -json
           echo "cluster_name=$(echo $TERRAFORM_OUTPUTS | jq -r '.cluster_name.value')" >> $GITHUB_OUTPUT
           # echo "my_ip_address=$(echo $TERRAFORM_OUTPUTS | jq -r '.my_ip_address.value')" >> $GITHUB_OUTPUT
+          echo "argocd_server_hostname=$(echo $TERRAFORM_OUTPUTS | jq -r '.argocd_server_hostname.value')" >> $GITHUB_OUTPUT
         working-directory: ./tf
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region us-east-1 --name ${{steps.export_outputs.outputs.cluster_name}}
 
-      - name: Get argocd password
+      - name: Get argocd details
         run: |
-          kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+          ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+          echo "argocd password=$ARGOCD_PASSWORD"
+          echo "ArgoCD is available at: https://${{steps.export_outputs.outputs.argocd_server_hostname}}"
