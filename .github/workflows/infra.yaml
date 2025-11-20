@@ -56,6 +56,5 @@ jobs:
 
       - name: Get argocd details
         run: |
-          ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
-          echo "argocd password=$ARGOCD_PASSWORD"
-          echo "ArgoCD is available at: https://${{steps.export_outputs.outputs.argocd_server_hostname}}"
+          echo "argocd password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+          echo "ArgoCD is available at: https://$(kubectl get svc argocd-server -n argocd -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")"
