@@ -43,6 +43,7 @@ jobs:
       - name: Set Cluster Name Variable
         id: set-cluster
         run: |
+           CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
            echo "CLUSTER_NAME=$(cat cluster_name.txt)" >> $GITHUB_ENV
 
       - name: Update kubeconfig
