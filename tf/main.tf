@@ -7,7 +7,10 @@ resource "helm_release" "argocd" {
   version    = "5.51.6" # Use the latest stable version or update as needed
 
   create_namespace = true
-
+  set {
+    name  = "server.service.type"
+    value = "LoadBalancer"
+  }
   # Optionally, set custom values:
   # values = [yamlencode({ ... })]
 }
