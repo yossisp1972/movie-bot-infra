@@ -51,6 +51,13 @@ jobs:
             cd tf
             chmod +x apply-karpenter-nodepool.sh
             ./apply-karpenter-nodepool.sh
+            
+      - name: Apply Argo CD Ingress
+        run: |
+            cd tf
+            chmod +x apply-argocd-ingress.sh
+            ./apply-argocd-ingress.sh
+            
       - name: Export Terraform Outputs to GitHub Environment
         id: export_outputs
         run: |
@@ -58,15 +65,15 @@ jobs:
           terraform output -json
           echo "cluster_name=$(echo $TERRAFORM_OUTPUTS | jq -r '.cluster_name.value')" >> $GITHUB_OUTPUT
           # echo "my_ip_address=$(echo $TERRAFORM_OUTPUTS | jq -r '.my_ip_address.value')" >> $GITHUB_OUTPUT
-          echo "argocd_server_hostname=$(echo $TERRAFORM_OUTPUTS | jq -r '.argocd_server_hostname.value')" >> $GITHUB_OUTPUT
         working-directory: ./tf
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region us-east-1 --name ${{steps.export_outputs.outputs.cluster_name}}
 
-      - name: Get argocd details
+      - name: Get Argo CD details
         run: |
           ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
           echo "Argo CD admin password: $ARGOCD_PASSWORD"
-          ALB_DNS=$(kubectl get svc argocd-server -n argocd -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
-          echo "ArgoCD is available at: https://$ALB_DNS"
+          ARGOCD_ALB=$(kubectl get ingress -n argocd argocd-server-ingress -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
+          echo "ArgoCD is available at: http://$ARGOCD_ALB"
+          echo "Username: admin"
