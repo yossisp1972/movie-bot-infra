@@ -1,6 +1,10 @@
 name: "Infra Workflow"
 on:
   workflow_call:
+    outputs:
+      cluster_name:
+        description: "EKS cluster name"
+        value: ${{ jobs.build.outputs.cluster_name }}
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -9,6 +13,8 @@ on:
 
 jobs:
   build:
+    outputs:
+      cluster_name: ${{ steps.export_outputs.outputs.cluster_name }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

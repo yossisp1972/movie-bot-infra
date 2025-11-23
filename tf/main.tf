@@ -84,6 +84,11 @@ module "vpc" {
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
+    "karpenter.sh/discovery"          = local.cluster_name
+  }
+
+  tags = {
+    "karpenter.sh/discovery" = local.cluster_name
   }
 }
 
@@ -135,6 +140,19 @@ module "eks" {
 }
 
 
+# Tag the EKS cluster security group for Karpenter discovery
+resource "aws_ec2_tag" "cluster_security_group" {
+  resource_id = module.eks.cluster_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
+
+resource "aws_ec2_tag" "node_security_group" {
+  resource_id = module.eks.node_security_group_id
+  key         = "karpenter.sh/discovery"
+  value       = local.cluster_name
+}
+
 # https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/ 
 data "aws_iam_policy" "ebs_csi_policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -168,3 +186,75 @@ module "irsa-karpenter" {
   ]
   oidc_fully_qualified_subjects = ["system:serviceaccount:karpenter:karpenter"]
 }
+
+# Install Karpenter using Helm
+resource "helm_release" "karpenter" {
+  name       = "karpenter"
+  namespace  = "karpenter"
+  repository = "oci://public.ecr.aws/karpenter"
+  chart      = "karpenter"
+  version    = "v0.33.0"
+
+  create_namespace = true
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.irsa-karpenter.iam_role_arn
+  }
+
+  set {
+    name  = "settings.clusterName"
+    value = module.eks.cluster_name
+  }
+
+  set {
+    name  = "settings.clusterEndpoint"
+    value = module.eks.cluster_endpoint
+  }
+
+  set {
+    name  = "settings.interruptionQueueName"
+    value = module.eks.cluster_name
+  }
+
+  depends_on = [
+    module.eks,
+    module.irsa-karpenter
+  ]
+}
+
+# IAM Role for Karpenter nodes
+resource "aws_iam_role" "karpenter_node_role" {
+  name = "KarpenterNodeRole-${module.eks.cluster_name}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_role_policies" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  ])
+
+  role       = aws_iam_role.karpenter_node_role.name
+  policy_arn = each.value
+}
+
+resource "aws_iam_instance_profile" "karpenter_node_instance_profile" {
+  name = "KarpenterNodeInstanceProfile-${module.eks.cluster_name}"
+  role = aws_iam_role.karpenter_node_role.name
+}
+
