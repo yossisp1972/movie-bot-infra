@@ -9,10 +9,18 @@ resource "helm_release" "argocd" {
   create_namespace = true
   set {
     name  = "server.service.type"
-    value = "LoadBalancer"
+    value = "ClusterIP"  # Changed from LoadBalancer - now using Ingress
   }
-  # Optionally, set custom values:
-  # values = [yamlencode({ ... })]
+  
+  set {
+    name  = "server.insecure"
+    value = "true"  # Allow HTTP since ALB will handle TLS
+  }
+  
+  depends_on = [
+    module.eks,
+    helm_release.aws_load_balancer_controller
+  ]
 }
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
@@ -284,6 +292,57 @@ module "irsa-karpenter" {
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ]
   oidc_fully_qualified_subjects = ["system:serviceaccount:karpenter:karpenter"]
+}
+
+# IRSA for AWS Load Balancer Controller
+module "irsa-aws-load-balancer-controller" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.39.0"
+
+  role_name = "AmazonEKSLoadBalancerControllerRole-${module.eks.cluster_name}"
+
+  attach_load_balancer_controller_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+# Install AWS Load Balancer Controller using Helm
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.7.1"
+
+  set {
+    name  = "clusterName"
+    value = module.eks.cluster_name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.irsa-aws-load-balancer-controller.iam_role_arn
+  }
+
+  depends_on = [
+    module.eks,
+    module.irsa-aws-load-balancer-controller
+  ]
 }
 
 # Install Karpenter using Helm

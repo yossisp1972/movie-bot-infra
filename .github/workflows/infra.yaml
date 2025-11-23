@@ -46,7 +46,11 @@ jobs:
       #   id: tf-output
       #   run: |
       #     terraform output -raw eks_cluster_name > cluster_name.txt
-
+      - name: Apply Karpenter NodePool
+        run: |
+            cd tf
+            chmod +x apply-karpenter-nodepool.sh
+            ./apply-karpenter-nodepool.sh
       - name: Export Terraform Outputs to GitHub Environment
         id: export_outputs
         run: |
