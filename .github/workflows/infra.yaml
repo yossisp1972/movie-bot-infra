@@ -72,8 +72,24 @@ jobs:
 
       - name: Get Argo CD details
         run: |
-          ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
-          echo "Argo CD admin password: $ARGOCD_PASSWORD"
-          ARGOCD_ALB=$(kubectl get ingress -n argocd argocd-server-ingress -o jsonpath="{.status.loadBalancer.ingress[0].hostname}")
-          echo "ArgoCD is available at: http://$ARGOCD_ALB"
-          echo "Username: admin"
+          echo "Waiting for Argo CD Ingress to get ALB hostname..."
+          for i in {1..30}; do
+            ARGOCD_ALB=$(kubectl get ingress -n argocd argocd-server-ingress -o jsonpath="{.status.loadBalancer.ingress[0].hostname}" 2>/dev/null)
+            if [ ! -z "$ARGOCD_ALB" ]; then
+              break
+            fi
+            echo "Waiting for ALB to be provisioned... ($i/30)"
+            sleep 10
+          done
+          
+          if [ -z "$ARGOCD_ALB" ]; then
+            echo "Warning: ALB not ready yet. Check manually with:"
+            echo "kubectl get ingress -n argocd argocd-server-ingress"
+          else
+            ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+            echo "================================================"
+            echo "Argo CD is available at: http://$ARGOCD_ALB"
+            echo "Username: admin"
+            echo "Password: $ARGOCD_PASSWORD"
+            echo "================================================"
+          fi
