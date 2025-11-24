@@ -276,6 +276,76 @@ module "irsa-ebs-csi" {
   oidc_fully_qualified_subjects = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
 }
 
+# Custom IAM policy for Karpenter
+resource "aws_iam_policy" "karpenter_controller_policy" {
+  name        = "KarpenterControllerPolicy-${module.eks.cluster_name}"
+  description = "IAM policy for Karpenter controller"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateFleet",
+          "ec2:CreateLaunchTemplate",
+          "ec2:CreateTags",
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeImages",
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceTypeOfferings",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeLaunchTemplates",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSpotPriceHistory",
+          "ec2:DescribeSubnets",
+          "ec2:DeleteLaunchTemplate",
+          "ec2:RunInstances",
+          "ec2:TerminateInstances"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole",
+          "iam:GetInstanceProfile",
+          "iam:CreateInstanceProfile",
+          "iam:TagInstanceProfile",
+          "iam:AddRoleToInstanceProfile",
+          "iam:RemoveRoleFromInstanceProfile",
+          "iam:DeleteInstanceProfile"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "pricing:GetProducts"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster"
+        ]
+        Resource = "arn:aws:eks:*:*:cluster/${module.eks.cluster_name}"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ReceiveMessage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # IRSA for Karpenter
 module "irsa-karpenter" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
@@ -285,10 +355,7 @@ module "irsa-karpenter" {
   role_name        = "KarpenterControllerRole-${module.eks.cluster_name}"
   provider_url     = module.eks.oidc_provider
   role_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-    "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
-    "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
-    "arn:aws:iam::aws:policy/AmazonEC2FullAccess",
+    aws_iam_policy.karpenter_controller_policy.arn,
     "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   ]
   oidc_fully_qualified_subjects = ["system:serviceaccount:karpenter:karpenter"]
