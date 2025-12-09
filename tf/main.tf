@@ -16,6 +16,31 @@ resource "helm_release" "argocd" {
     name  = "server.insecure"
     value = "true"  # Allow HTTP since ALB will handle TLS
   }
+
+  set {
+  name  = "server.ingress.enabled"
+  value = "true"
+}
+
+  set {
+    name  = "server.ingress.ingressClassName"
+    value = "alb"
+  }
+
+  set {
+    name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme"
+    value = "internet-facing"
+  }
+
+  set {
+    name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports"
+    value = "[{\"HTTP\": 80}, {\"HTTPS\": 443}]"
+  }
+
+  set {
+    name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/ssl-redirect"
+    value = "443"
+  }
   
   depends_on = [
     module.eks,

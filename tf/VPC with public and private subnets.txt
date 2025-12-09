@@ -1,0 +1,12 @@
+VPC with public and private subnets
+NAT Gateway and VPC Endpoints (S3, ECR, EC2, STS)
+Security group for VPC endpoints
+EKS cluster (Terraform AWS module)
+Managed node group for EKS
+Karpenter (Helm, IRSA, custom IAM, node instance profile)
+AWS Load Balancer Controller (Helm, IRSA)
+EBS CSI Driver (EKS addon, IRSA)
+Argo CD (Helm)
+Ingress resources for ALB (Argo CD and movie-bot)
+IAM roles and policies for all controllers and nodes
+Application deployment packaged as a Helm chart (movie-bot)
